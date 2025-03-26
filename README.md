@@ -2,6 +2,8 @@
 
 This project aims to fine-tune a BERT model using a dataset containing text and label for sentiment analysis. It includes both the training process and an online deployment for real-time sentiment prediction.
 
+### Here is our demonstration video. https://youtu.be/hmiSq_ca2fU
+
 ## Project Structure
 
 ### Online_Deployment
