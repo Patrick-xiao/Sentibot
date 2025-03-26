@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis System</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 800px;
+            height: 800px;
+            background-image: url('./LingnanUniversity_logo.svg.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.04;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 12px 0;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(52, 152, 219, 0.2);
+        }
+
+        .header-content {
+            width: 100%;
+            max-width: 1700px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            height: 45px;
+            margin-right: 18px;
+            opacity: 0.9;
+            transition: opacity 0.3s ease;
+        }
+        
+        .logo:hover {
+            opacity: 1;
+        }
+
+        .header-title {
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .credit-text {
+            font-size: 15px;
+            color: var(--secondary-color);
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: linear-gradient(to right, rgba(236, 240, 241, 0.8), rgba(189, 195, 199, 0.4));
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 1700px;
+            gap: 30px;
+            margin-top: 80px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            width: 100%;
+            max-width: 800px;
+            min-height: 75vh;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        h1 {
+            color: var(--secondary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        .input-section {
+            margin-bottom: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            width: 100%;
+            flex-grow: 1;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            max-height: 50px;
+        }
+
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-section {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            min-height: 150px;
+            transition: all 0.3s ease;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .sentiment-positive { background: linear-gradient(to right, #d4edda, #e8f6ed); }
+        .sentiment-neutral { background: linear-gradient(to right, #fff3cd, #fff9e6); }
+        .sentiment-negative { background: linear-gradient(to right, #f8d7da, #fbeaec); }
+
+        .sentiment-label {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .sentiment-label::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .sentiment-positive .sentiment-label::before { background-color: var(--success-color); }
+        .sentiment-neutral .sentiment-label::before { background-color: var(--warning-color); }
+        .sentiment-negative .sentiment-label::before { background-color: var(--danger-color); }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hot-list {
+            list-style: none;
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: 500px;
+            padding-right: 5px;
+        }
+
+        .proverb-item {
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            word-wrap: break-word;
+        }
+
+        .proverb-item:hover {
+            transform: translateX(5px);
+            background: #e3f2fd;
+        }
+
+        .proverb-en {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--secondary-color);
+            margin-bottom: 6px;
+            font-style: italic;
+        }
+
+        .proverb-zh {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .refresh-btn {
+            margin-top: 20px;
+            max-width: 200px;
+            align-self: center;
+        }
+
+        .hot-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .hot-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .hot-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 1600px) {
+            .main-container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo-container">
+                <img src="./LingnanUniversity_logo.svg.png" alt="Lingnan University Logo" class="logo">
+                <div class="header-title">AIBA SENTIBOT</div>
+            </div>
+            <div class="credit-text">Made By ASAP Group</div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="container">
+            <h1>Sentiment Analysis System</h1>
+            <div class="input-section">
+                <textarea id="inputText" placeholder="Enter text for sentiment analysis..."></textarea>
+                <button id="analyzeBtn" onclick="analyzeSentiment()">Analyze Sentiment</button>
+            </div>
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>Analyzing...</p>
+            </div>
+            <div class="result-section" id="resultSection">
+                <div class="result-text">Analysis Result:</div>
+                <div class="sentiment-label" id="sentimentLabel"></div>
+                <div class="confidence-score" id="confidenceScore"></div>
+            </div>
+        </div>
+
+        <div class="container">
+            <h1>English Proverb Reference</h1>
+            <p style="text-align: center; margin-bottom: 10px; color: #666; font-size: 14px;">
+                Click on a proverb to fill in the text box (8 proverbs displayed)
+            </p>
+            <div class="loading" id="proverbLoading">
+                <div class="loading-spinner"></div>
+                <p>Loading proverbs...</p>
+            </div>
+            <ul class="hot-list" id="proverbList"></ul>
+            <button class="refresh-btn" onclick="fetchProverbs()">Refresh Proverbs</button>
+        </div>
+    </div>
+
+    <script>
+        const SENTIMENT_API_URL = 'https://api-inference.huggingface.co/models/nlptown/bert-base-multilingual-uncased-sentiment';
+        const HF_API_KEY = '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';
+        const PROVERB_API_URL = 'https://apis.tianapi.com/enmaxim/index';
+        const API_KEY = '950bc699160eb3375c840497fada1032';
+
+        document.addEventListener('DOMContentLoaded', fetchProverbs);
+
+        async function fetchProverbs() {
+            const proverbLoading = document.getElementById('proverbLoading');
+            const proverbList = document.getElementById('proverbList');
+            
+            proverbLoading.classList.add('show');
+            proverbList.innerHTML = '';
+            
+            try {
+                const proverbs = await Promise.all(
+                    Array(8).fill().map(async () => {
+                        const response = await fetch(`${PROVERB_API_URL}?key=${API_KEY}`);
+                        if (!response.ok) throw new Error('获取格言失败');
+                        const data = await response.json();
+                        if (data.code !== 200) throw new Error(data.msg || '获取格言失败');
+                        return data.result;
+                    }).filter(p => p) // 过滤掉失败的请求
+                );
+                
+                if (proverbs.length === 0) throw new Error('未能获取任何格言');
+                
+                proverbs.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'proverb-item';
+                    li.innerHTML = `
+                        <div class="proverb-en">${item.en}</div>
+                        <div class="proverb-zh">${item.zh}</div>
+                    `;
+                    
+                    li.addEventListener('click', function() {
+                        const inputText = document.getElementById('inputText');
+                        inputText.value = item.en;
+                        inputText.focus();
+                        li.style.backgroundColor = '#d4edda';
+                        setTimeout(() => li.style.backgroundColor = '', 500);
+                    });
+                    
+                    proverbList.appendChild(li);
+                });
+            } catch (error) {
+                proverbList.innerHTML = `<li class="proverb-item" style="color: red; border-left-color: #e74c3c;">Failed to load proverbs: ${error.message}</li>`;
+            } finally {
+                proverbLoading.classList.remove('show');
+            }
+        }
+
+        async function analyzeSentiment() {
+            const inputText = document.getElementById('inputText').value.trim();
+            if (!inputText) {
+                alert('Please enter text for analysis');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const resultSection = document.getElementById('resultSection');
+            loading.classList.add('show');
+            resultSection.classList.remove('show');
+
+            try {
+                const response = await fetch(SENTIMENT_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${HF_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(inputText)
+                });
+
+                if (!response.ok) throw new Error(`API request failed: ${response.status}`);
+
+                const data = await response.json();
+                const score = parseFloat(data[0][0].label.split(' ')[0]);
+                let sentiment, normalizedScore;
+
+                if (score <= 2) {
+                    sentiment = 'negative';
+                    normalizedScore = 1 - ((score - 1) / 1);
+                } else if (score >= 4) {
+                    sentiment = 'positive';
+                    normalizedScore = (score - 4) / 1;
+                } else {
+                    sentiment = 'neutral';
+                    normalizedScore = 1 - Math.abs(score - 3) / 1;
+                }
+
+                const sentimentMap = {
+                    positive: 'Positive',
+                    neutral: 'Neutral',
+                    negative: 'Negative'
+                };
+
+                resultSection.className = `result-section show sentiment-${sentiment}`;
+                document.getElementById('sentimentLabel').textContent = `Sentiment: ${sentimentMap[sentiment]}`;
+                document.getElementById('confidenceScore').textContent = `Confidence: ${(normalizedScore * 100).toFixed(2)}%`;
+
+            } catch (error) {
+                alert('Error during analysis: ' + error.message);
+            } finally {
+                loading.classList.remove('show');
+            }
+        }
+
+        document.getElementById('inputText').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                analyzeSentiment();
+            }
+        });
+    </script>
+</body>
+</html> 
